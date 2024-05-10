@@ -1,5 +1,5 @@
 // Conexion a base de datos
-const pool = require('./config/conexion.js');
+const pool = require('../config/conexion.js');
 
 
 //  agregar usuario
