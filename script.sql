@@ -1,6 +1,6 @@
 CREATE DATABASE bancosolar;
 
-\ c bancosolar;
+\c bancosolar;
 
 CREATE TABLE usuarios (
     id SERIAL PRIMARY KEY,

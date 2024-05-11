@@ -1,44 +1,66 @@
 // Conexion a base de datos
 const pool = require('../config/conexion.js');
-
+//manejo errores
+const manejoErrores = require('../errores/manejoErrores.js');
 
 //  agregar usuario
 async function agregarUsuario(nombre, balance) {
-    console.log("Valores recibidos: ", nombre, balance);
-    const result = await pool.query({
-        text: 'INSERT INTO usuarios (id, nombre, balance) VALUES (default, $1, $2) RETURNING *',
-        values: [nombre, balance]
-    })
-    console.log("Registro agregado: ", result.rows[0]);
-    return result.rows[0];
-};
+    try {
+        console.log("Valores recibidos: ", nombre, balance);
+        const result = await pool.query({
+            text: 'INSERT INTO usuarios (id, nombre, balance) VALUES (DEFAULT, $1, $2) RETURNING *',
+            values: [nombre, balance]
+        });
+        console.log("Registro agregado: ", result.rows[0]);
+        return result.rows[0];
+    } catch (error) {
+        manejoErrores(error,pool,'usuarios');
+    }
+}
 
 //mostrar usuarios
 async function todos() {
-    const result = await pool.query("SELECT * FROM usuarios order by id");
-    return result.rows;
+    try {
+        const result = await pool.query("SELECT * FROM usuarios ORDER BY id");
+        return result.rows;
+    } catch (error) {
+        manejoErrores(error,pool,'usuarios');
+    }
 }
 
 //editar usuario
 async function editarUsuario(id, nombre, balance) {
-    const result = await pool.query("UPDATE usuarios SET nombre = $2, balance = $3 WHERE id = $1 RETURNING *", [id, nombre, balance]);
-    return result.rows[0];
+    try {
+        const result = await pool.query("UPDATE usuarios SET nombre = $2, balance = $3 WHERE id = $1 RETURNING *", [id, nombre, balance]);
+        return result.rows[0];
+    } catch (error) {
+        manejoErrores(error,pool,'usuarios');
+    }
 }
 
-//eliminar usuario ***FALTA CASCADE***
+//eliminar usuario
 const eliminarUsuario = async (id) => {
-    const result = await pool.query(
-        {
-            text: 'delete from usuarios where id = $1 returning *',
+    try {
+        const result = await pool.query({
+            text: 'DELETE FROM usuarios WHERE id = $1 RETURNING *',
             values: [id]
         });
-    console.log('user eliminado:', result.rows)
-    return result.rows;
+
+        console.log('Usuario eliminado:', result.rows);
+
+        if (result.rows.length > 0) {
+            return { success: true, message: 'Registro eliminado correctamente' };
+        } else {
+            return { success: false, message: 'El usuario no existe' };
+        }
+    } catch (error) {
+        manejoErrores(error,pool,'usuarios');
+        return { success: false, message: 'Error al eliminar usuario' };
+    }
 };
 
 //proceso tranferencia
-async function transferencias(emisor, receptor, monto, fechaHoraActual) {
-
+async function transferencias(emisor, receptor, monto) {
 
     try {
         //fecha
@@ -93,6 +115,7 @@ async function transferencias(emisor, receptor, monto, fechaHoraActual) {
 
     } catch (e) {
         await pool.query("ROLLBACK");
+        manejoErrores(error,pool,'usuarios');
         console.log("Error conexion o instruccion, Transaccion abortada")
         return e
     }
@@ -100,12 +123,15 @@ async function transferencias(emisor, receptor, monto, fechaHoraActual) {
 
 //obtener transferencias registradas como array
 async function getTransferencias() {
-    const result = await pool.query(
-        {
-            text: 'SELECT t.fecha, u.nombre, r.nombre, t.monto FROM transferencias t INNER JOIN usuarios u ON u.id = t.emisor INNER JOIN usuarios r ON r.id = t.receptor',
+    try {
+        const result = await pool.query({
+            text: 'SELECT t.id, u.nombre, r.nombre, t.monto, t.fecha FROM transferencias t INNER JOIN usuarios u ON u.id = t.emisor INNER JOIN usuarios r ON r.id = t.receptor',
             rowMode: 'array'
         });
-    return result.rows;
+        return result.rows;
+    } catch (error) {
+        manejoErrores(error,pool,'usuarios');
+    }
 }
 
 module.exports = { agregarUsuario, editarUsuario, todos, eliminarUsuario, transferencias, getTransferencias };
