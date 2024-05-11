@@ -55,7 +55,7 @@ const eliminarUsuario = async (id) => {
         }
     } catch (error) {
         manejoErrores(error,pool,'usuarios');
-        return { success: false, message: 'Error al eliminar usuario' };
+        return { success: false, message: 'No se puede eliminar al usuario porque está ligado a una transferencia' };
     }
 };
 
@@ -110,14 +110,14 @@ async function transferencias(emisor, receptor, monto) {
         } else {
             await pool.query("ROLLBACK");
             console.log("Transacción incompleta, se aplicó ROLLBACK");
-            return e
+            return error
         }
 
-    } catch (e) {
+    } catch (error) {
         await pool.query("ROLLBACK");
-        manejoErrores(error,pool,'usuarios');
+        manejoErrores(error,pool,'transferencias');
         console.log("Error conexion o instruccion, Transaccion abortada")
-        return e
+        return error
     }
 };
 
@@ -128,9 +128,15 @@ async function getTransferencias() {
             text: 'SELECT t.id, u.nombre, r.nombre, t.monto, t.fecha FROM transferencias t INNER JOIN usuarios u ON u.id = t.emisor INNER JOIN usuarios r ON r.id = t.receptor',
             rowMode: 'array'
         });
+        // console.log(result,'resultadostrans')
+        // if(result.length == 0){
+        //     res.send("No existen transferencias registradas aún");
+        // }else{
+        //     return result.rows;
+        // };
         return result.rows;
     } catch (error) {
-        manejoErrores(error,pool,'usuarios');
+        manejoErrores(error,pool,'transferencias');
     }
 }
 

@@ -5,7 +5,7 @@ const { agregarUsuario, editarUsuario, todos, eliminarUsuario, transferencias, g
 const express = require('express');
 const app = express();
 app.listen(3000, () => {
-    console.log('server en puerto 3000')
+    console.log('server corriendo en puerto 3000')
 });
 
 // Middleware para parsear JSON osea que reconoce la instruccion de headers
@@ -42,22 +42,22 @@ app.get('/usuarios', async (req, res) => {
 // editar usuario
 app.put('/usuario', async (req, res) => {
     const { id } = req.query;
-    const { name, balance } = req.body; 
+    const { name, balance } = req.body; Z
     const result = await editarUsuario(id, name, balance);
     console.log('valores editados:', result);
-    res.json(result); 
+    res.json(result);
 });
 
 //borrar usuarios
 app.delete('/usuario', async (req, res) => {
-    try{
-    const { id } = req.query;
-    const resultado = await eliminarUsuario(id);
-    console.log(resultado);
-    res.send({resultado});
-}catch(e){
-    res.send(e.message);
-}
+    try {
+        const { id } = req.query;
+        const resultado = await eliminarUsuario(id);
+        console.log(resultado);
+        res.send({ resultado });
+    } catch (e) {
+        res.send(e.message);
+    }
 });
 
 // transaccion trasferencia
