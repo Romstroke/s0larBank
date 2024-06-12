@@ -12,9 +12,13 @@ async function agregarUsuario(nombre, balance) {
             values: [nombre, balance]
         });
         console.log("Registro agregado: ", result.rows[0]);
-        return result.rows[0];
+        // return result.rows[0];
+        return {
+            status:200,
+            mensaje:"Registro exitodso"
+        }
     } catch (error) {
-        manejoErrores(error,pool,'usuarios');
+        return manejoErrores(error,pool,'usuarios');
     }
 }
 
@@ -24,7 +28,7 @@ async function todos() {
         const result = await pool.query("SELECT * FROM usuarios ORDER BY id");
         return result.rows;
     } catch (error) {
-        manejoErrores(error,pool,'usuarios');
+        return manejoErrores(error,pool,'usuarios');
     }
 }
 
@@ -49,23 +53,23 @@ const eliminarUsuario = async (id) => {
         console.log('Usuario eliminado:', result.rows);
 
         if (result.rows.length > 0) {
-            return { success: true, message: 'Registro eliminado correctamente' };
+            return { success: true, mensaje: 'Registro eliminado correctamente' };
         } else {
-            return { success: false, message: 'El usuario no existe' };
+            return { success: false, mensaje: 'El usuario no existe' };
         }
     } catch (error) {
         manejoErrores(error,pool,'usuarios');
-        return { success: false, message: 'No se puede eliminar al usuario porque está ligado a una transferencia' };
+        return { success: false, mensaje: 'No se puede eliminar al usuario porque está ligado a una transferencia' };
     }
 };
 
 //proceso tranferencia
 async function transferencias(emisor, receptor, monto) {
-
+ 
     try {
         //fecha
         const fechaHoraActual = (await pool.query("SELECT NOW()")).rows[0].now;
-        console.log('datos llegando a funcion', emisor, receptor, monto, fechaHoraActual)
+        // console.log('datos llegando a funcion', emisor, receptor, monto, fechaHoraActual)
         //id emisor
         const consultaIdUno = "select id from usuarios where nombre = $1";
         const resEmisor = await pool.query(consultaIdUno, [emisor]);
@@ -76,7 +80,7 @@ async function transferencias(emisor, receptor, monto) {
         let idEmisor = resEmisor.rows[0].id;
         let idReceptor = resReceptor.rows[0].id;
 
-        console.log('ids:', idEmisor, idReceptor)
+        // console.log('ids:', idEmisor, idReceptor)
 
         //inicio transaccion
         await pool.query("BEGIN");
@@ -116,8 +120,9 @@ async function transferencias(emisor, receptor, monto) {
     } catch (error) {
         await pool.query("ROLLBACK");
         manejoErrores(error,pool,'transferencias');
-        console.log("Error conexion o instruccion, Transaccion abortada")
-        return error
+        // console.log('error',error)
+        // return { success: false, mensaje: 'Emisor sin dinero suficiente para realizar esta transferencia' }
+        return error;
     }
 };
 

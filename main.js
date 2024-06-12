@@ -27,22 +27,38 @@ app.post('/usuario', async (req, res) => {
     const { nombre, balance } = req.body;
     console.log(nombre, balance)
     console.log('req.body', req.body);
-    const result = await agregarUsuario(nombre, balance);
-    console.log("Valor devuelto por la funcion de base de datos: ", result);
-    res.status(200).send(result);
+
+    //Validar que balance sea mayor o igual a 0 y número
+    if (Number.isInteger(balance) && balance >= 0) {
+        const result = await agregarUsuario(nombre, balance);
+        console.log("Valor devuelto por la funcion de base de datos: ", result);
+        res.status(result.status).send(result);
+    } else if (Number.isInteger(balance) && balance <= 0) {
+        console.log('Tienes que poner un numero mayor a 0');
+        res.status(400).send({
+            mensaje: 'Tienes que poner un numero mayor a 0'
+        })
+    } else {
+        console.log('El balance tiene que ser un número entero');
+        res.status(400).send({
+            mensaje: 'El balance tiene que ser un número entero'
+        })
+    }
+
 });
 
 // mostrar usuarios
 app.get('/usuarios', async (req, res) => {
     const result = await todos();
     console.log("Respuesta de la funcion todos: ", result);
-    res.json(result);
+    // res.json(result);
+    res.status(200).json(result);
 });
 
 // editar usuario
 app.put('/usuario', async (req, res) => {
     const { id } = req.query;
-    const { name, balance } = req.body; Z
+    const { name, balance } = req.body;
     const result = await editarUsuario(id, name, balance);
     console.log('valores editados:', result);
     res.json(result);
@@ -63,9 +79,26 @@ app.delete('/usuario', async (req, res) => {
 // transaccion trasferencia
 app.post('/transferencia', async (req, res) => {
     const { emisor, receptor, monto } = req.body;
-    console.log('recibido transferencia', req.body);
-    const resultado = await transferencias(emisor, receptor, monto);
-    res.json(resultado);
+       //que emisor y receptor no sean el mismo
+       if(emisor == receptor){
+        console.log('Emisor y receptor no pueden ser la misma persona');
+        res.status(400).send({
+            mensaje: 'Emisor y receptor no pueden ser la misma persona'
+        })
+    }else{
+        console.log('recibido transferencia', req.body);
+
+        // FALTA AGREGAR UNA ALERTA QUE DIGA QUE EL EMISOR NO TIENE DINERO SUFICIENTE
+
+        // if(emisor.balance < monto){
+        //     console.log('Emisor sin dinero suficiente para realizar esta transferencia');
+        //     res.status(400).send({
+        //         mensaje: 'Emisor sin dinero suficiente para realizar esta transferencia'
+        //     })
+        // }
+        const resultado = await transferencias(emisor, receptor, monto);
+        res.json(resultado);
+    }
 });
 
 // ver transferencias
